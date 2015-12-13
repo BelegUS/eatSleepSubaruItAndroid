@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <string name="app_name">Subaru SSM</string>
+
+    <!--  SubaruSsm -->
+    <string name="not_connected">You are not connected to a car BT device</string>
+    <string name="bt_not_enabled_leaving">Bluetooth was not enabled. Leaving Subaru Ssm.</string>
+    <string name="title_connecting">Connecting...</string>
+    <string name="title_connected_to">Connected to: </string>
+    <string name="title_not_connected">Not connected</string>
+
+    <!--  DeviceListActivity -->
+    <string name="scanning">Scanning for BT devices...</string>
+    <string name="select_device">Select a proper BT device</string>
+    <string name="none_paired">No devices have been paired</string>
+    <string name="none_found">No devices found</string>
+    <string name="title_paired_devices">Paired Devices</string>
+    <string name="title_other_devices">Other Available Devices</string>
+    <string name="button_scan">Scan for BT devices</string>
+
+    <!-- Options Menu -->
+    <string name="connect">Connect to a BT device</string>
+</resources>
