@@ -8,9 +8,14 @@ android {
         applicationId "pl.cendrzak.szymon.SubaruSsm"
     }
 
+    dependencies {
+        compile fileTree(dir: 'libs', include: ['*.jar'])
+        compile "com.android.support:appcompat-v7:19.0.+"
+    }
+
     buildTypes {
         release {
-            runProguard false
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }

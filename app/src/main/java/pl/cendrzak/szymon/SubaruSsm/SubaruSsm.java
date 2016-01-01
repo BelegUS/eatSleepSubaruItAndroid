@@ -31,7 +31,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -68,6 +71,8 @@ public class SubaruSsm extends Activity {
     private Button engineLoadButton;
     private Button endConnectionButton;
     private SpeedometerView speedometer;
+    private ListView mDrawerList;
+    private ArrayAdapter<String> mAdapter;
 
     // Name of the connected device
     private String mConnectedDeviceName = null;
@@ -92,6 +97,14 @@ public class SubaruSsm extends Activity {
         requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
         setContentView(R.layout.main);
         getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.custom_title);
+        mDrawerList = (ListView)findViewById(R.id.navList);
+        mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+            }
+        });
+        this.addDrawerItems();
 
         // Set up the custom title
         mTitle = (TextView) findViewById(R.id.title_left_text);
@@ -118,6 +131,12 @@ public class SubaruSsm extends Activity {
                 return String.valueOf((int) Math.round(progress));
             }
         });
+    }
+
+    private void addDrawerItems() {
+        String[] osArray = { "Android", "iOS", "Windows", "OS X", "Linux" };
+        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
+        mDrawerList.setAdapter(mAdapter);
     }
 
     @Override
