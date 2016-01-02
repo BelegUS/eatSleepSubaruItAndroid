@@ -3,9 +3,6 @@ package pl.cendrzak.szymon.SubaruSsm;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-/**
- * Created by Szymon on 2014-12-11.
- */
 public class SubaruDataProcessor {
 
     private enum State

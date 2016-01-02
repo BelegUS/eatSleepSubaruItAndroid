@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="SpeedometerView">
+    <declare-styleable name="SpeedometerFragment">
         <attr name="maxSpeed" format="float" />
         <attr name="speed" format="float"/>
         <attr name="labelTextSize" format="dimension" />

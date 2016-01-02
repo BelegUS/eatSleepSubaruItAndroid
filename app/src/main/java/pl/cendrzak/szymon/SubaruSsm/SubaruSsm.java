@@ -1,51 +1,35 @@
-/*
- * Copyright (C) 2009 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package pl.cendrzak.szymon.SubaruSsm;
 
 import android.app.Activity;
+import android.app.Fragment;
+import android.app.FragmentManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
-import android.graphics.Color;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.view.View.OnClickListener;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.cardiomood.android.speedometer.SpeedometerView;
-
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * This is the main Activity that displays the current chat session.
  */
-public class SubaruSsm extends Activity {
+public class SubaruSsm extends ActionBarActivity {
     // Debugging
     private static final String TAG = "SubaruSsm";
 
@@ -64,52 +48,44 @@ public class SubaruSsm extends Activity {
     private static final int REQUEST_CONNECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
 
-    // Layout Views
-    private TextView mTitle;
-    private Button engineSpeedButton;
-    private Button engineTempButton;
-    private Button engineLoadButton;
-    private Button endConnectionButton;
-    private SpeedometerView speedometer;
-    private ListView mDrawerList;
-    private ArrayAdapter<String> mAdapter;
+    // Navigation Drawer
+    private ListView mNavigationList;
+    private DrawerLayout mDrawerLayout;
+    private ActionBarDrawerToggle mNavigationToggle;
+    private String mActivityTitle;
+    private CharSequence mDrawerTitle;
+    private CharSequence mTitle;
+    NavigationAdapter navigationAdapter;
+    List<NavigationItem> navigationItemList;
 
-    // Name of the connected device
-    private String mConnectedDeviceName = null;
     // String buffer for outgoing messages
     private StringBuffer mOutStringBuffer;
     // Local Bluetooth adapter
     private BluetoothAdapter mBluetoothAdapter = null;
     // Member object for the chat services
-    private BluetoothConnectionService mChatService = null;
+    private BluetoothConnectionService mConnectionService = null;
     //Data requested from Subaru
-    private SubaruParameter currentRequestedParameter;
+    public SubaruParameter currentRequestedParameter;
     //Subaru Query Constructor instance to generate queries to be sent to Subaru
-    private SubaruQueryConstructor subaruQueryConstructor = new SubaruQueryConstructor();
+    public SubaruQueryConstructor subaruQueryConstructor = new SubaruQueryConstructor();
     //Subaru Data Processor instance to process data received from Subaru
-    private SubaruDataProcessor subaruDataProcessor = new SubaruDataProcessor(subaruQueryConstructor);
+    public SubaruDataProcessor subaruDataProcessor = new SubaruDataProcessor(subaruQueryConstructor);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Set up the window layout
-        requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
         setContentView(R.layout.main);
-        getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.custom_title);
-        mDrawerList = (ListView)findViewById(R.id.navList);
-        mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-            }
-        });
-        this.addDrawerItems();
+        mNavigationList = (ListView) findViewById(R.id.navigation_drawer);
+        navigationItemList = new ArrayList<NavigationItem>();
+        mDrawerLayout = (DrawerLayout)findViewById(R.id.drawer_layout);
+        mTitle = mDrawerTitle = getTitle();
 
-        // Set up the custom title
-        mTitle = (TextView) findViewById(R.id.title_left_text);
-        mTitle.setText(R.string.app_name);
-        mTitle = (TextView) findViewById(R.id.title_right_text);
+        addNavigationItems();
+        setupNavigationDrawer();
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
 
         // Get local Bluetooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -121,36 +97,119 @@ public class SubaruSsm extends Activity {
             return;
         }
 
-        // Customize SpeedometerView
-        speedometer = (SpeedometerView) findViewById(R.id.speedometer);
-
-        // Add label converter
-        speedometer.setLabelConverter(new SpeedometerView.LabelConverter() {
-            @Override
-            public String getLabelFor(double progress, double maxProgress) {
-                return String.valueOf((int) Math.round(progress));
-            }
-        });
+//        if (savedInstanceState == null) {
+//            showItem(0);
+//        }
     }
 
-    private void addDrawerItems() {
-        String[] osArray = { "Android", "iOS", "Windows", "OS X", "Linux" };
-        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
-        mDrawerList.setAdapter(mAdapter);
+    private void addNavigationItems() {
+        navigationItemList.add(new NavigationItem("Gauge view", R.drawable.abc_ic_menu_copy_mtrl_am_alpha));
+        navigationItemList.add(new NavigationItem("Graph view", R.drawable.abc_ic_commit_search_api_mtrl_alpha));
+        navigationItemList.add(new NavigationItem("Export to file", R.drawable.abc_ic_menu_copy_mtrl_am_alpha));
+        navigationItemList.add(new NavigationItem("Exit", R.drawable.abc_ic_clear_mtrl_alpha));
+
+        navigationAdapter = new NavigationAdapter(this, R.layout.custom_drawer_item, navigationItemList);
+
+        mNavigationList.setAdapter(navigationAdapter);
+        mNavigationList.setOnItemClickListener(new NavigationItemClickListener());
+    }
+
+    public void showItem(int position) {
+
+        Fragment fragment = null;
+        Bundle args = new Bundle();
+        switch (position) {
+            case 0:
+                fragment = new SpeedometerFragment();
+                args.putString(SpeedometerFragment.ITEM_NAME, navigationItemList.get(position)
+                        .getItemName());
+                args.putInt(SpeedometerFragment.IMAGE_RESOURCE_ID, navigationItemList.get(position)
+                        .getImgResID());
+                break;
+            default:
+                fragment = new SpeedometerFragment();
+                args.putString(SpeedometerFragment.ITEM_NAME, navigationItemList.get(position)
+                        .getItemName());
+                args.putInt(SpeedometerFragment.IMAGE_RESOURCE_ID, navigationItemList.get(position)
+                        .getImgResID());
+                break;
+        }
+
+        fragment.setArguments(args);
+        FragmentManager frgManager = getFragmentManager();
+        frgManager.beginTransaction().replace(R.id.content_frame, fragment)
+                .commit();
+
+        mNavigationList.setItemChecked(position, true);
+        setTitle(navigationItemList.get(position).getItemName());
+        mDrawerLayout.closeDrawer(mNavigationList);
+
+    }
+
+    @Override
+    public void setTitle(CharSequence title) {
+        mTitle = title;
+        getSupportActionBar().setTitle(mTitle);
+    }
+
+    private void setupNavigationDrawer() {
+        mNavigationToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_open, R.string.drawer_close) {
+
+            /** Called when a drawer has settled in a completely open state. */
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+                mNavigationList.bringToFront();
+            }
+
+            /** Called when a drawer has settled in a completely closed state. */
+            public void onDrawerClosed(View view) {
+                super.onDrawerClosed(view);
+                getSupportActionBar().setTitle(mTitle);
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+            }
+        };
+
+        mNavigationToggle.setDrawerIndicatorEnabled(true);
+        mDrawerLayout.setDrawerListener(mNavigationToggle);
+    }
+
+    private class NavigationItemClickListener implements
+            ListView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position,
+                                long id) {
+            showItem(position);
+
+        }
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        // Sync the toggle state after onRestoreInstanceState has occurred.
+        mNavigationToggle.syncState();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // Pass any configuration change to the drawer toggles
+        mNavigationToggle.onConfigurationChanged(newConfig);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-
+        Log.d("I'm in:", "onStart");
         // If BT is not on, request that it be enabled.
-        // setupChat() will then be called during onActivityResult
+        // setupCarConnection() will then be called during onActivityResult
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-        // Otherwise, setup the chat session
+            // Otherwise, setup the chat session
         } else {
-            if (mChatService == null) setupChat();
+            if (mConnectionService == null) setupCarConnection();
         }
     }
 
@@ -161,93 +220,18 @@ public class SubaruSsm extends Activity {
         // Performing this check in onResume() covers the case in which BT was
         // not enabled during onStart(), so we were paused to enable it...
         // onResume() will be called when ACTION_REQUEST_ENABLE activity returns.
-        if (mChatService != null) {
+        if (mConnectionService != null) {
             // Only if the state is STATE_NONE, do we know that we haven't started already
-            if (mChatService.getState() == BluetoothConnectionService.STATE_NONE) {
-              // Start the Bluetooth chat services
-              mChatService.start();
+            if (mConnectionService.getState() == BluetoothConnectionService.STATE_NONE) {
+                // Start the Bluetooth chat services
+                mConnectionService.start();
             }
         }
     }
 
-    private void setupChat() {
-
-        // Initialize the Engine Speed button with a listener for a click events
-        engineSpeedButton = (Button) findViewById(R.id.engineSpeedButton);
-        engineSpeedButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                currentRequestedParameter = SubaruParameter.ENGINE_SPEED;
-
-                // configure value range and ticks
-                speedometer.setMaxSpeed(8000);
-                speedometer.setMajorTickStep(1000);
-                speedometer.setMinorTicks(100);
-
-                // Configure value range colors
-                speedometer.addColoredRange(0, 3500, Color.GREEN);
-                speedometer.addColoredRange(3500, 5500, Color.YELLOW);
-                speedometer.addColoredRange(5500, 8000, Color.RED);
-
-                sendMessage(subaruQueryConstructor.getQueryForParameter(currentRequestedParameter));
-            }
-        });
-
-        // Initialize the Engine Temp button with a listener for a click events
-        engineTempButton = (Button) findViewById(R.id.engineTempButton);
-        engineTempButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                currentRequestedParameter = SubaruParameter.ENGINE_TEMP;
-
-                // configure value range and ticks
-                speedometer.setMaxSpeed(200);
-                speedometer.setMajorTickStep(20);
-                speedometer.setMinorTicks(1);
-
-                // Configure value range colors
-                speedometer.addColoredRange(0, 75, Color.RED);
-                speedometer.addColoredRange(75, 125, Color.GREEN);
-                speedometer.addColoredRange(125, 200, Color.RED);
-
-                sendMessage(subaruQueryConstructor.getQueryForParameter(currentRequestedParameter));
-            }
-        });
-
-        // Initialize the Engine Load button with a listener for a click events
-        engineLoadButton = (Button) findViewById(R.id.engineLoadButton);
-        engineLoadButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                currentRequestedParameter = SubaruParameter.ENGINE_LOAD;
-
-                // configure value range and ticks
-                speedometer.setMaxSpeed(300);
-                speedometer.setMajorTickStep(10);
-                speedometer.setMinorTicks(1);
-
-                // Configure value range colors
-                speedometer.addColoredRange(0, 35, Color.GREEN);
-                speedometer.addColoredRange(35, 70, Color.YELLOW);
-                speedometer.addColoredRange(70, 100, Color.RED);
-
-                sendMessage(subaruQueryConstructor.getQueryForParameter(currentRequestedParameter));
-            }
-        });
-
-        // Initialize the Stop button with a listener for a click events
-        endConnectionButton = (Button) findViewById(R.id.endConnectionButton);
-        endConnectionButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                currentRequestedParameter = SubaruParameter.END_CONNECTION;
-
-                sendMessage(subaruQueryConstructor.getQueryForParameter(currentRequestedParameter));
-            }
-        });
-
+    private void setupCarConnection() {
         // Initialize the BluetoothConnectionService to perform bluetooth connections
-        mChatService = new BluetoothConnectionService(this, mHandler);
+        mConnectionService = new BluetoothConnectionService(this, mHandler);
 
         // Initialize the buffer for outgoing messages
         mOutStringBuffer = new StringBuffer("");
@@ -267,19 +251,20 @@ public class SubaruSsm extends Activity {
     public void onDestroy() {
         super.onDestroy();
         // Stop the Bluetooth chat services
-        if (mChatService != null) {
+        if (mConnectionService != null) {
             sendMessage(subaruQueryConstructor.getQueryForParameter(SubaruParameter.END_CONNECTION));
-            mChatService.stop();
+            mConnectionService.stop();
         }
     }
 
     /**
      * Sends a message.
-     * @param commandToSend  An array of bytes to send.
+     *
+     * @param commandToSend An array of bytes to send.
      */
-    private void sendMessage(byte[] commandToSend) {
+    public void sendMessage(byte[] commandToSend) {
         // Check that we're actually connected before trying anything
-        if (mChatService.getState() != BluetoothConnectionService.STATE_CONNECTED) {
+        if (mConnectionService.getState() != BluetoothConnectionService.STATE_CONNECTED) {
             Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -287,7 +272,7 @@ public class SubaruSsm extends Activity {
         // Check that there's actually something to send
         if (commandToSend.length > 0) {
             // Tell the BluetoothConnectionService to write
-            mChatService.write(commandToSend);
+            mConnectionService.write(commandToSend);
 
             // Reset out string buffer to zero and clear the edit text field
             mOutStringBuffer.setLength(0);
@@ -299,50 +284,50 @@ public class SubaruSsm extends Activity {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
-            case MESSAGE_STATE_CHANGE:
-
-                switch (msg.arg1) {
-                case BluetoothConnectionService.STATE_CONNECTED:
-                    mTitle.setText(R.string.title_connected_to);
-                    mTitle.append(mConnectedDeviceName);
+//                case MESSAGE_STATE_CHANGE:
+//
+//                    switch (msg.arg1) {
+//                        case BluetoothConnectionService.STATE_CONNECTED:
+////                            mTitle.setText(R.string.title_connected_to);
+////                            mTitle.append(mConnectedDeviceName);
+//                            break;
+//                        case BluetoothConnectionService.STATE_CONNECTING:
+////                            mTitle.setText(R.string.title_connecting);
+//                            break;
+//                        case BluetoothConnectionService.STATE_LISTEN:
+//                        case BluetoothConnectionService.STATE_NONE:
+////                            mTitle.setText(R.string.title_not_connected);
+//                            break;
+//                    }
+//                    break;
+                case MESSAGE_WRITE:
                     break;
-                case BluetoothConnectionService.STATE_CONNECTING:
-                    mTitle.setText(R.string.title_connecting);
-                    break;
-                case BluetoothConnectionService.STATE_LISTEN:
-                case BluetoothConnectionService.STATE_NONE:
-                    mTitle.setText(R.string.title_not_connected);
-                    break;
-                }
-                break;
-            case MESSAGE_WRITE:
-                break;
-            case MESSAGE_READ:
-                byte[] tempBuf = (byte[]) msg.obj;
-                byte[] readArray = Arrays.copyOfRange(tempBuf, 0, msg.arg1);
-                subaruDataProcessor.appendToReceivedData(readArray);
-                for(int i=0; i<msg.arg1; i++) {
-                    if(currentRequestedParameter == null) {
-                        break;
+                case MESSAGE_READ:
+                    byte[] tempBuf = (byte[]) msg.obj;
+                    byte[] readArray = Arrays.copyOfRange(tempBuf, 0, msg.arg1);
+                    subaruDataProcessor.appendToReceivedData(readArray);
+                    for (int i = 0; i < msg.arg1; i++) {
+                        if (currentRequestedParameter == null) {
+                            break;
+                        }
+                        int castedByte = subaruDataProcessor.processDataForParameter(currentRequestedParameter);
+                        if (castedByte != -1) {
+                            Log.d("Subaru value:", Integer.toString(castedByte));
+                            Log.d("Requested:", currentRequestedParameter.toString());
+//                            speedometer.setSpeed(castedByte, 0, 0);
+                        }
                     }
-                    int castedByte = subaruDataProcessor.processDataForParameter(currentRequestedParameter);
-                    if(castedByte != -1) {
-                        Log.d("Subaru value:",Integer.toString(castedByte));
-                        Log.d("Requested:", currentRequestedParameter.toString());
-                        speedometer.setSpeed(castedByte, 0, 0);
-                    }
-                }
-                break;
-            case MESSAGE_DEVICE_NAME:
-                // save the connected device's name
-                mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
-                Toast.makeText(getApplicationContext(), "Connected to "
-                               + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
-                break;
-            case MESSAGE_TOAST:
-                Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
-                               Toast.LENGTH_SHORT).show();
-                break;
+                    break;
+                case MESSAGE_DEVICE_NAME:
+                    // save the connected device's name
+                    String mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
+                    Toast.makeText(getApplicationContext(), "Connected to "
+                            + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
+                    break;
+                case MESSAGE_TOAST:
+                    Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
+                            Toast.LENGTH_SHORT).show();
+                    break;
             }
         }
     };
@@ -350,29 +335,29 @@ public class SubaruSsm extends Activity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         switch (requestCode) {
-        case REQUEST_CONNECT_DEVICE:
-            // When DeviceListActivity returns with a device to connect
-            if (resultCode == Activity.RESULT_OK) {
-                // Get the device MAC address
-                String address = data.getExtras()
-                                     .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
-                // Get the BluetoothDevice object
-                BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
-                // Attempt to connect to the device
-                mChatService.connect(device);
-            }
-            break;
-        case REQUEST_ENABLE_BT:
-            // When the request to enable Bluetooth returns
-            if (resultCode == Activity.RESULT_OK) {
-                // Bluetooth is now enabled, so set up a chat session
-                setupChat();
-            } else {
-                // User did not enable Bluetooth or an error occured
-                Log.d(TAG, "BT not enabled");
-                Toast.makeText(this, R.string.bt_not_enabled_leaving, Toast.LENGTH_SHORT).show();
-                finish();
-            }
+            case REQUEST_CONNECT_DEVICE:
+                // When DeviceListActivity returns with a device to connect
+                if (resultCode == Activity.RESULT_OK) {
+                    // Get the device MAC address
+                    String address = data.getExtras()
+                            .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+                    // Get the BluetoothDevice object
+                    BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+                    // Attempt to connect to the device
+                    mConnectionService.connect(device);
+                }
+                break;
+            case REQUEST_ENABLE_BT:
+                // When the request to enable Bluetooth returns
+                if (resultCode == Activity.RESULT_OK) {
+                    // Bluetooth is now enabled, so set up a chat session
+                    setupCarConnection();
+                } else {
+                    // User did not enable Bluetooth or an error occured
+                    Log.d(TAG, "BT not enabled");
+                    Toast.makeText(this, R.string.bt_not_enabled_leaving, Toast.LENGTH_SHORT).show();
+                    finish();
+                }
         }
     }
 
@@ -386,12 +371,18 @@ public class SubaruSsm extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-        case R.id.scan:
-            // Launch the DeviceListActivity to see devices and do scan
-            Intent serverIntent = new Intent(this, DeviceListActivity.class);
-            startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
+            case R.id.scan:
+                // Launch the DeviceListActivity to see devices and do scan
+                Intent serverIntent = new Intent(this, DeviceListActivity.class);
+                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
+                return true;
+        }
+
+        // Activate the navigation drawer toggle
+        if (mNavigationToggle.onOptionsItemSelected(item)) {
             return true;
         }
-        return false;
+
+        return super.onOptionsItemSelected(item);
     }
 }

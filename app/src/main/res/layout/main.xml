@@ -1,17 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><!-- Copyright (C) 2009 The Android Open Source Project
-
-     Licensed under the Apache License, Version 2.0 (the "License");
-     you may not use this file except in compliance with the License.
-     You may obtain a copy of the License at
-
-          http://www.apache.org/licenses/LICENSE-2.0
-
-     Unless required by applicable law or agreed to in writing, software
-     distributed under the License is distributed on an "AS IS" BASIS,
-     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-     See the License for the specific language governing permissions and
-     limitations under the License.
--->
+<?xml version="1.0" encoding="utf-8"?>
 
 <android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -20,71 +7,17 @@
     android:layout_height="match_parent">
 
     <ListView
-        android:id="@+id/navList"
+        android:id="@+id/navigation_drawer"
         android:layout_width="200dp"
         android:layout_height="match_parent"
         android:layout_gravity="left|start"
         android:background="#ffeeeeee"/>
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/content_frame"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="vertical"
         android:weightSum="1">
-        <!--<ListView android:id="@+id/in"-->
-        <!--android:layout_width="fill_parent"-->
-        <!--android:layout_height="393dp"-->
-        <!--android:stackFromBottom="true"-->
-        <!--android:transcriptMode="alwaysScroll"-->
-        <!--android:layout_weight="0.91" />-->
-
-
-        <com.cardiomood.android.speedometer.SpeedometerView
-            android:id="@+id/speedometer"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:padding="8dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:baselineAligned="false"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/engineSpeedButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Engine Speed" />
-
-            <Button
-                android:id="@+id/engineTempButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Engine Temp" />
-
-            <Button
-                android:id="@+id/engineLoadButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Engine Load" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/endConnectionButton"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:text="Stop" />
-        </LinearLayout>
-
     </LinearLayout>
 </android.support.v4.widget.DrawerLayout>

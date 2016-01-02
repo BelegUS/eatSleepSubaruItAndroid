@@ -1,8 +1,5 @@
 package pl.cendrzak.szymon.SubaruSsm;
 
-/**
- * Created by Szymon on 2014-12-11.
- */
 public class SubaruQueryConstructor {
 
     public byte[] getQueryForParameter(SubaruParameter parameter)
