@@ -19,6 +19,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -70,6 +71,8 @@ public class SubaruSsm extends ActionBarActivity {
     public SubaruQueryConstructor subaruQueryConstructor = new SubaruQueryConstructor();
     //Subaru Data Processor instance to process data received from Subaru
     public SubaruDataProcessor subaruDataProcessor = new SubaruDataProcessor(subaruQueryConstructor);
+    //Listeners for Subaru Data received and processed
+    ArrayList<NewSubaruValueListener> newSubaruValueListeners = new ArrayList<NewSubaruValueListener> ();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -90,16 +93,14 @@ public class SubaruSsm extends ActionBarActivity {
         // Get local Bluetooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
+        Button scanButton = (Button) findViewById(R.id.scan);
+        scanButton.setOnClickListener(new ScanButtonClickListener());
+
         // If the adapter is null, then Bluetooth is not supported
         if (mBluetoothAdapter == null) {
             Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
             finish();
-            return;
         }
-
-//        if (savedInstanceState == null) {
-//            showItem(0);
-//        }
     }
 
     private void addNavigationItems() {
@@ -112,6 +113,12 @@ public class SubaruSsm extends ActionBarActivity {
 
         mNavigationList.setAdapter(navigationAdapter);
         mNavigationList.setOnItemClickListener(new NavigationItemClickListener());
+    }
+
+    public void setOnNewSubaruValueListener(NewSubaruValueListener listener)
+    {
+        // Store the listener object
+        this.newSubaruValueListeners.add(listener);
     }
 
     public void showItem(int position) {
@@ -184,6 +191,23 @@ public class SubaruSsm extends ActionBarActivity {
         }
     }
 
+    private class ScanButtonClickListener implements Button.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            // Launch the DeviceListActivity to see devices and do scan
+            if (!mBluetoothAdapter.isEnabled()) {
+                Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+                // Otherwise, setup the chat session
+            } else {
+                if (mConnectionService == null) {
+                    setupCarConnection();
+                }
+                showDeviceListIntent();
+            }
+        }
+    }
+
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
@@ -196,21 +220,6 @@ public class SubaruSsm extends ActionBarActivity {
         super.onConfigurationChanged(newConfig);
         // Pass any configuration change to the drawer toggles
         mNavigationToggle.onConfigurationChanged(newConfig);
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        Log.d("I'm in:", "onStart");
-        // If BT is not on, request that it be enabled.
-        // setupCarConnection() will then be called during onActivityResult
-        if (!mBluetoothAdapter.isEnabled()) {
-            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-            // Otherwise, setup the chat session
-        } else {
-            if (mConnectionService == null) setupCarConnection();
-        }
     }
 
     @Override
@@ -279,6 +288,12 @@ public class SubaruSsm extends ActionBarActivity {
         }
     }
 
+    private void showDeviceListIntent()
+    {
+        Intent serverIntent = new Intent(this, DeviceListActivity.class);
+        startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
+    }
+
     // The Handler that gets information back from the BluetoothConnectionService
     private final Handler mHandler = new Handler() {
         @Override
@@ -314,7 +329,11 @@ public class SubaruSsm extends ActionBarActivity {
                         if (castedByte != -1) {
                             Log.d("Subaru value:", Integer.toString(castedByte));
                             Log.d("Requested:", currentRequestedParameter.toString());
-//                            speedometer.setSpeed(castedByte, 0, 0);
+                            SubaruValue subaruValue = new SubaruValue();
+                            subaruValue.value = castedByte;
+                            for (NewSubaruValueListener newSubaruValueListener : newSubaruValueListeners) {
+                                newSubaruValueListener.onNewSubaruValue(subaruValue);
+                            }
                         }
                     }
                     break;
@@ -350,11 +369,11 @@ public class SubaruSsm extends ActionBarActivity {
             case REQUEST_ENABLE_BT:
                 // When the request to enable Bluetooth returns
                 if (resultCode == Activity.RESULT_OK) {
-                    // Bluetooth is now enabled, so set up a chat session
+                    // Bluetooth is now enabled, so set up a chat session and search for connection
                     setupCarConnection();
+                    showDeviceListIntent();
                 } else {
-                    // User did not enable Bluetooth or an error occured
-                    Log.d(TAG, "BT not enabled");
+                    // User did not enable Bluetooth or an error occurred
                     Toast.makeText(this, R.string.bt_not_enabled_leaving, Toast.LENGTH_SHORT).show();
                     finish();
                 }
@@ -370,14 +389,6 @@ public class SubaruSsm extends ActionBarActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.scan:
-                // Launch the DeviceListActivity to see devices and do scan
-                Intent serverIntent = new Intent(this, DeviceListActivity.class);
-                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
-                return true;
-        }
-
         // Activate the navigation drawer toggle
         if (mNavigationToggle.onOptionsItemSelected(item)) {
             return true;

@@ -19,5 +19,12 @@
         android:layout_height="fill_parent"
         android:orientation="vertical"
         android:weightSum="1">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Scan"
+            android:id="@+id/scan"
+            android:layout_gravity="center_horizontal" />
     </LinearLayout>
 </android.support.v4.widget.DrawerLayout>

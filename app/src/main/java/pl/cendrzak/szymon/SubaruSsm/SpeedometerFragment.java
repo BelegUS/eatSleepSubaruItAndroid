@@ -3,6 +3,7 @@ package pl.cendrzak.szymon.SubaruSsm;
 import android.app.Fragment;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,8 +27,10 @@ public class SpeedometerFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        final SubaruSsm subaruSsm = (SubaruSsm)getActivity();
         View view = inflater.inflate(R.layout.speedometer_fragment_layout, container,
                 false);
+
 
         // Customize SpeedometerFragment
         speedometer = (SpeedometerGauge) view.findViewById(R.id.speedometer);
@@ -40,12 +43,12 @@ public class SpeedometerFragment extends Fragment {
             }
         });
 
+
         // Initialize the Engine Speed button with a listener for a click events
         Button engineSpeedButton = (Button) view.findViewById(R.id.engineSpeedButton);
         engineSpeedButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SubaruSsm subaruSsm = (SubaruSsm)getActivity();
                 subaruSsm.currentRequestedParameter = SubaruParameter.ENGINE_SPEED;
 
                 // configure value range and ticks
@@ -67,7 +70,6 @@ public class SpeedometerFragment extends Fragment {
         engineTempButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SubaruSsm subaruSsm = (SubaruSsm)getActivity();
                 subaruSsm.currentRequestedParameter = SubaruParameter.ENGINE_TEMP;
 
                 // configure value range and ticks
@@ -89,7 +91,6 @@ public class SpeedometerFragment extends Fragment {
         engineLoadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SubaruSsm subaruSsm = (SubaruSsm)getActivity();
                 subaruSsm.currentRequestedParameter = SubaruParameter.ENGINE_LOAD;
 
                 // configure value range and ticks
@@ -111,10 +112,16 @@ public class SpeedometerFragment extends Fragment {
         endConnectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SubaruSsm subaruSsm = (SubaruSsm)getActivity();
                 subaruSsm.currentRequestedParameter = SubaruParameter.END_CONNECTION;
 
                 subaruSsm.sendMessage(subaruSsm.subaruQueryConstructor.getQueryForParameter(subaruSsm.currentRequestedParameter));
+            }
+        });
+
+        subaruSsm.setOnNewSubaruValueListener(new NewSubaruValueListener() {
+            @Override
+            public void onNewSubaruValue(SubaruValue subaruValue) {
+                speedometer.setSpeed(subaruValue.value);
             }
         });
 
