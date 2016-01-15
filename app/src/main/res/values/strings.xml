@@ -23,4 +23,7 @@
 
     <!-- Options Menu -->
     <string name="connect">Connect to a BT device</string>
+
+    <string name="select_parameters">Select parameters</string>
+    <string name="ok">OK</string>
 </resources>

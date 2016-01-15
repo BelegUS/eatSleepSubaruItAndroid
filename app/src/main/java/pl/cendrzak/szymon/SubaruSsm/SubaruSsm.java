@@ -27,6 +27,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import pl.cendrzak.szymon.SubaruSsm.fragments.SelectParametersFragment;
+import pl.cendrzak.szymon.SubaruSsm.fragments.SpeedometerFragment;
+
 /**
  * This is the main Activity that displays the current chat session.
  */
@@ -53,8 +56,6 @@ public class SubaruSsm extends ActionBarActivity {
     private ListView mNavigationList;
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mNavigationToggle;
-    private String mActivityTitle;
-    private CharSequence mDrawerTitle;
     private CharSequence mTitle;
     NavigationAdapter navigationAdapter;
     List<NavigationItem> navigationItemList;
@@ -82,7 +83,6 @@ public class SubaruSsm extends ActionBarActivity {
         mNavigationList = (ListView) findViewById(R.id.navigation_drawer);
         navigationItemList = new ArrayList<NavigationItem>();
         mDrawerLayout = (DrawerLayout)findViewById(R.id.drawer_layout);
-        mTitle = mDrawerTitle = getTitle();
 
         addNavigationItems();
         setupNavigationDrawer();
@@ -104,10 +104,10 @@ public class SubaruSsm extends ActionBarActivity {
     }
 
     private void addNavigationItems() {
-        navigationItemList.add(new NavigationItem("Gauge view", R.drawable.abc_ic_menu_copy_mtrl_am_alpha));
-        navigationItemList.add(new NavigationItem("Graph view", R.drawable.abc_ic_commit_search_api_mtrl_alpha));
-        navigationItemList.add(new NavigationItem("Export to file", R.drawable.abc_ic_menu_copy_mtrl_am_alpha));
-        navigationItemList.add(new NavigationItem("Exit", R.drawable.abc_ic_clear_mtrl_alpha));
+        navigationItemList.add(new NavigationItem("gauge", "Gauge view", R.drawable.abc_ic_menu_copy_mtrl_am_alpha));
+        navigationItemList.add(new NavigationItem("graph", "Graph view", R.drawable.abc_ic_commit_search_api_mtrl_alpha));
+        navigationItemList.add(new NavigationItem("export", "Export to file", R.drawable.abc_ic_menu_copy_mtrl_am_alpha));
+        navigationItemList.add(new NavigationItem("exit", "Exit", R.drawable.abc_ic_clear_mtrl_alpha));
 
         navigationAdapter = new NavigationAdapter(this, R.layout.custom_drawer_item, navigationItemList);
 
@@ -123,16 +123,23 @@ public class SubaruSsm extends ActionBarActivity {
 
     public void showItem(int position) {
 
-        Fragment fragment = null;
+        NavigationItem item = (NavigationItem)mNavigationList.getItemAtPosition(position);
+        Fragment fragment;
         Bundle args = new Bundle();
-        switch (position) {
-            case 0:
+
+        switch (item.getId()) {
+            case "gauge":
                 fragment = new SpeedometerFragment();
                 args.putString(SpeedometerFragment.ITEM_NAME, navigationItemList.get(position)
                         .getItemName());
                 args.putInt(SpeedometerFragment.IMAGE_RESOURCE_ID, navigationItemList.get(position)
                         .getImgResID());
                 break;
+            case "graph":
+                fragment = new SelectParametersFragment();
+                break;
+            case "exit":
+                finish();
             default:
                 fragment = new SpeedometerFragment();
                 args.putString(SpeedometerFragment.ITEM_NAME, navigationItemList.get(position)
@@ -187,7 +194,6 @@ public class SubaruSsm extends ActionBarActivity {
         public void onItemClick(AdapterView<?> parent, View view, int position,
                                 long id) {
             showItem(position);
-
         }
     }
 

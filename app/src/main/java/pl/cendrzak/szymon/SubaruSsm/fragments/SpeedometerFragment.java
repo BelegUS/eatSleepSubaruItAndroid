@@ -1,17 +1,20 @@
-package pl.cendrzak.szymon.SubaruSsm;
+package pl.cendrzak.szymon.SubaruSsm.fragments;
 
 import android.app.Fragment;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.cardiomood.android.controls.gauge.SpeedometerGauge;
+
+import pl.cendrzak.szymon.SubaruSsm.NewSubaruValueListener;
+import pl.cendrzak.szymon.SubaruSsm.R;
+import pl.cendrzak.szymon.SubaruSsm.SubaruParameter;
+import pl.cendrzak.szymon.SubaruSsm.SubaruSsm;
+import pl.cendrzak.szymon.SubaruSsm.SubaruValue;
 
 public class SpeedometerFragment extends Fragment {
     private SpeedometerGauge speedometer;
