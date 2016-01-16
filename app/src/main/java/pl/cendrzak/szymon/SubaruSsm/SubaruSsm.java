@@ -1,6 +1,7 @@
 package pl.cendrzak.szymon.SubaruSsm;
 
 import android.app.Activity;
+import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.bluetooth.BluetoothAdapter;
@@ -27,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import pl.cendrzak.szymon.SubaruSsm.fragments.SelectParametersFragment;
+import pl.cendrzak.szymon.SubaruSsm.fragments.SelectParametersDialogFragment;
 import pl.cendrzak.szymon.SubaruSsm.fragments.SpeedometerFragment;
 
 /**
@@ -128,15 +129,16 @@ public class SubaruSsm extends ActionBarActivity {
         Bundle args = new Bundle();
 
         switch (item.getId()) {
-            case "gauge":
-                fragment = new SpeedometerFragment();
-                args.putString(SpeedometerFragment.ITEM_NAME, navigationItemList.get(position)
-                        .getItemName());
-                args.putInt(SpeedometerFragment.IMAGE_RESOURCE_ID, navigationItemList.get(position)
-                        .getImgResID());
-                break;
+//            case "gauge":
+//                fragment = new SpeedometerFragment();
+//                args.putString(SpeedometerFragment.ITEM_NAME, navigationItemList.get(position)
+//                        .getItemName());
+//                args.putInt(SpeedometerFragment.IMAGE_RESOURCE_ID, navigationItemList.get(position)
+//                        .getImgResID());
+//                break;
             case "graph":
-                fragment = new SelectParametersFragment();
+                DialogFragment dialog = new SelectParametersDialogFragment();
+                dialog.show(this.getFragmentManager(), "SelectParametersDialog");
                 break;
             case "exit":
                 finish();
@@ -146,13 +148,13 @@ public class SubaruSsm extends ActionBarActivity {
                         .getItemName());
                 args.putInt(SpeedometerFragment.IMAGE_RESOURCE_ID, navigationItemList.get(position)
                         .getImgResID());
+
+                fragment.setArguments(args);
+                FragmentManager frgManager = getFragmentManager();
+                frgManager.beginTransaction().replace(R.id.content_frame, fragment)
+                        .commit();
                 break;
         }
-
-        fragment.setArguments(args);
-        FragmentManager frgManager = getFragmentManager();
-        frgManager.beginTransaction().replace(R.id.content_frame, fragment)
-                .commit();
 
         mNavigationList.setItemChecked(position, true);
         setTitle(navigationItemList.get(position).getItemName());
