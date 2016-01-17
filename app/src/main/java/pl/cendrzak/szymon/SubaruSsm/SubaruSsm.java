@@ -1,7 +1,6 @@
 package pl.cendrzak.szymon.SubaruSsm;
 
 import android.app.Activity;
-import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.bluetooth.BluetoothAdapter;
@@ -14,7 +13,6 @@ import android.os.Message;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -28,15 +26,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import pl.cendrzak.szymon.SubaruSsm.fragments.SelectParametersDialogFragment;
 import pl.cendrzak.szymon.SubaruSsm.fragments.SpeedometerFragment;
 
 /**
  * This is the main Activity that displays the current chat session.
  */
 public class SubaruSsm extends ActionBarActivity {
-    // Debugging
-    private static final String TAG = "SubaruSsm";
 
     // Message types sent from the BluetoothConnectionService Handler
     public static final int MESSAGE_STATE_CHANGE = 1;
@@ -69,10 +64,8 @@ public class SubaruSsm extends ActionBarActivity {
     private BluetoothConnectionService mConnectionService = null;
     //Data requested from Subaru
     public SubaruParameter currentRequestedParameter;
-    //Subaru Query Constructor instance to generate queries to be sent to Subaru
-    public SubaruQueryConstructor subaruQueryConstructor = new SubaruQueryConstructor();
     //Subaru Data Processor instance to process data received from Subaru
-    public SubaruDataProcessor subaruDataProcessor = new SubaruDataProcessor(subaruQueryConstructor);
+    public SubaruDataProcessor subaruDataProcessor;
     //Listeners for Subaru Data received and processed
     ArrayList<NewSubaruValueListener> newSubaruValueListeners = new ArrayList<NewSubaruValueListener> ();
 
@@ -136,10 +129,6 @@ public class SubaruSsm extends ActionBarActivity {
 //                args.putInt(SpeedometerFragment.IMAGE_RESOURCE_ID, navigationItemList.get(position)
 //                        .getImgResID());
 //                break;
-            case "graph":
-                DialogFragment dialog = new SelectParametersDialogFragment();
-                dialog.show(this.getFragmentManager(), "SelectParametersDialog");
-                break;
             case "exit":
                 finish();
             default:
@@ -269,27 +258,45 @@ public class SubaruSsm extends ActionBarActivity {
         super.onDestroy();
         // Stop the Bluetooth chat services
         if (mConnectionService != null) {
-            sendMessage(subaruQueryConstructor.getQueryForParameter(SubaruParameter.END_CONNECTION));
+            sendEndConnectionQuery();
             mConnectionService.stop();
         }
     }
 
+    public void sendEndConnectionQuery()
+    {
+        if (mConnectionService.getState() != BluetoothConnectionService.STATE_CONNECTED) {
+            Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Tell the BluetoothConnectionService to write
+        mConnectionService.write(SubaruQuery.getEndConnectionQuery());
+
+        // Reset out string buffer to zero and clear the edit text field
+        mOutStringBuffer.setLength(0);
+
+    }
+
     /**
-     * Sends a message.
+     * Sends a Subaru query.
      *
-     * @param commandToSend An array of bytes to send.
+     * @param subaruQuery Instance of SubaruQuery to be sent.
      */
-    public void sendMessage(byte[] commandToSend) {
+    public void sendSubaruQuery(SubaruQuery subaruQuery) {
         // Check that we're actually connected before trying anything
         if (mConnectionService.getState() != BluetoothConnectionService.STATE_CONNECTED) {
             Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT).show();
             return;
         }
 
+        this.subaruDataProcessor.setRequestedSubaruQuery(subaruQuery);
+
+        byte[] queryToSend = subaruQuery.getQuery();
         // Check that there's actually something to send
-        if (commandToSend.length > 0) {
+        if (queryToSend.length > 0) {
             // Tell the BluetoothConnectionService to write
-            mConnectionService.write(commandToSend);
+            mConnectionService.write(queryToSend);
 
             // Reset out string buffer to zero and clear the edit text field
             mOutStringBuffer.setLength(0);
@@ -333,10 +340,8 @@ public class SubaruSsm extends ActionBarActivity {
                         if (currentRequestedParameter == null) {
                             break;
                         }
-                        int castedByte = subaruDataProcessor.processDataForParameter(currentRequestedParameter);
+                        int castedByte = subaruDataProcessor.processData();
                         if (castedByte != -1) {
-                            Log.d("Subaru value:", Integer.toString(castedByte));
-                            Log.d("Requested:", currentRequestedParameter.toString());
                             SubaruValue subaruValue = new SubaruValue();
                             subaruValue.value = castedByte;
                             for (NewSubaruValueListener newSubaruValueListener : newSubaruValueListeners) {

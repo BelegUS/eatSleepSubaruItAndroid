@@ -13,21 +13,15 @@ public class SubaruDataProcessor {
         DATA_RECEIVED,
     }
 
-    //private SubaruParameter currentRequestedParameter;
-    private SubaruQueryConstructor subaruQueryConstructor;
+    private SubaruQuery requestedSubaruQuery;
     private ArrayList<Byte> receivedData = new ArrayList<Byte>();
     private State currentState = State.NOTHING_RECEIVED;
 
-    public SubaruDataProcessor(SubaruQueryConstructor subaruQueryConstructor)
-    {
-        this.subaruQueryConstructor = subaruQueryConstructor;
-    }
-
-    public int processDataForParameter(SubaruParameter parameter)
+    public int processData()
     {
         Iterator<Byte> iterator = receivedData.iterator();
-        byte requestedMsb = subaruQueryConstructor.getMsbForParameter(parameter);
-        byte requestedLsb = subaruQueryConstructor.getLsbForParameter(parameter);
+        byte requestedMsb = requestedSubaruQuery.getMsb();
+        byte requestedLsb = requestedSubaruQuery.getLsb();
         while(iterator.hasNext()) {
             byte singleByte = iterator.next();
             //First byte ever or new set of bytes incoming - check if received is MSB
@@ -78,6 +72,11 @@ public class SubaruDataProcessor {
         for(byte singleByte : newData) {
             receivedData.add(singleByte);
         }
+    }
+
+    public void setRequestedSubaruQuery(SubaruQuery requestedSubaruQuery)
+    {
+        this.requestedSubaruQuery = requestedSubaruQuery;
     }
 
 

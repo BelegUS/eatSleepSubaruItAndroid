@@ -10,35 +10,24 @@
         android:layout_height="wrap_content"
         android:padding="2dp"/>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:id="@+id/currentValueText"
+        android:layout_gravity="center_horizontal" />
+
+    <Spinner
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/select_value_spinner"
+        android:spinnerMode="dialog" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:baselineAligned="true"
         android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/engineSpeedButton"
-            style="@style/Widget.AppCompat.ActionButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Engine Speed" />
-
-        <Button
-            android:id="@+id/engineTempButton"
-            style="@style/Widget.AppCompat.ActionButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Engine Temp" />
-
-        <Button
-            android:id="@+id/engineLoadButton"
-            style="@style/Widget.AppCompat.ActionButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Engine Load" />
 
     </LinearLayout>
 
