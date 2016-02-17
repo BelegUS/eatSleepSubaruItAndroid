@@ -62,8 +62,6 @@ public class SubaruSsm extends ActionBarActivity {
     private BluetoothAdapter mBluetoothAdapter = null;
     // Member object for the chat services
     private BluetoothConnectionService mConnectionService = null;
-    //Data requested from Subaru
-    public SubaruParameter currentRequestedParameter;
     //Subaru Data Processor instance to process data received from Subaru
     public SubaruDataProcessor subaruDataProcessor;
     //Listeners for Subaru Data received and processed
@@ -95,6 +93,7 @@ public class SubaruSsm extends ActionBarActivity {
             Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
             finish();
         }
+        subaruDataProcessor = new SubaruDataProcessor();
     }
 
     private void addNavigationItems() {
@@ -281,18 +280,18 @@ public class SubaruSsm extends ActionBarActivity {
     /**
      * Sends a Subaru query.
      *
-     * @param subaruQuery Instance of SubaruQuery to be sent.
+     * @param subaruParameter Instance of SubaruQuery to be sent.
      */
-    public void sendSubaruQuery(SubaruQuery subaruQuery) {
+    public void queryCarForParameter(SubaruParameter subaruParameter) {
         // Check that we're actually connected before trying anything
-        if (mConnectionService.getState() != BluetoothConnectionService.STATE_CONNECTED) {
+        if (mConnectionService == null || mConnectionService.getState() != BluetoothConnectionService.STATE_CONNECTED) {    //TODO THAT NULL
             Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT).show();
             return;
         }
 
-        this.subaruDataProcessor.setRequestedSubaruQuery(subaruQuery);
+        this.subaruDataProcessor.setRequestedParameter(subaruParameter);
 
-        byte[] queryToSend = subaruQuery.getQuery();
+        byte[] queryToSend = subaruParameter.getQuery().getQueryBytes();
         // Check that there's actually something to send
         if (queryToSend.length > 0) {
             // Tell the BluetoothConnectionService to write
@@ -337,10 +336,10 @@ public class SubaruSsm extends ActionBarActivity {
                     byte[] readArray = Arrays.copyOfRange(tempBuf, 0, msg.arg1);
                     subaruDataProcessor.appendToReceivedData(readArray);
                     for (int i = 0; i < msg.arg1; i++) {
-                        if (currentRequestedParameter == null) {
+                        if (subaruDataProcessor.getRequestedParameter() == null) {
                             break;
                         }
-                        int castedByte = subaruDataProcessor.processData();
+                        Double castedByte = subaruDataProcessor.processData();
                         if (castedByte != -1) {
                             SubaruValue subaruValue = new SubaruValue();
                             subaruValue.value = castedByte;

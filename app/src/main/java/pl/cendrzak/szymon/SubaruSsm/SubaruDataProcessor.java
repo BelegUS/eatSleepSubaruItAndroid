@@ -13,15 +13,15 @@ public class SubaruDataProcessor {
         DATA_RECEIVED,
     }
 
-    private SubaruQuery requestedSubaruQuery;
+    private SubaruParameter requestedParameter;
     private ArrayList<Byte> receivedData = new ArrayList<Byte>();
     private State currentState = State.NOTHING_RECEIVED;
 
-    public int processData()
+    public Double processData()
     {
         Iterator<Byte> iterator = receivedData.iterator();
-        byte requestedMsb = requestedSubaruQuery.getMsb();
-        byte requestedLsb = requestedSubaruQuery.getLsb();
+        byte requestedMsb = requestedParameter.getQuery().getMsb();
+        byte requestedLsb = requestedParameter.getQuery().getLsb();
         while(iterator.hasNext()) {
             byte singleByte = iterator.next();
             //First byte ever or new set of bytes incoming - check if received is MSB
@@ -32,7 +32,7 @@ public class SubaruDataProcessor {
                     currentState = State.NOTHING_RECEIVED;
                 }
                 iterator.remove();
-                return -1;
+                return (double)-1;
             } else if (currentState == State.MSB_RECEIVED) {
                 if(singleByte == requestedLsb) {
                     currentState = State.LSB_RECEIVED;
@@ -40,32 +40,16 @@ public class SubaruDataProcessor {
                     currentState = State.NOTHING_RECEIVED;
                 }
                 iterator.remove();
-                return -1;
+                return (double)-1;
             } else if (currentState == State.LSB_RECEIVED) {
                 currentState = State.DATA_RECEIVED;
                 int unsignedByteValue = (singleByte & 0xFF);
-                int calculatedValue = convertReceivedData(unsignedByteValue, parameter);
+                Double calculatedValue = requestedParameter.getValueConverter().convertValue(unsignedByteValue);
                 iterator.remove();
                 return calculatedValue;
             }
         }
-        return -1;
-    }
-
-    private int convertReceivedData(int data, SubaruParameter parameter)
-    {
-        switch(parameter) {
-            case ENGINE_SPEED:
-                return data * 25;
-            case ENGINE_LOAD:
-                return data;
-            case ENGINE_TEMP:
-                return data - 50;
-            case END_CONNECTION:
-                return -1;
-            default:
-                throw new IllegalArgumentException();
-        }
+        return (double)-1;
     }
 
     public void appendToReceivedData(byte[] newData) {
@@ -74,10 +58,12 @@ public class SubaruDataProcessor {
         }
     }
 
-    public void setRequestedSubaruQuery(SubaruQuery requestedSubaruQuery)
+    public void setRequestedParameter(SubaruParameter requestedParameter)
     {
-        this.requestedSubaruQuery = requestedSubaruQuery;
+        this.requestedParameter = requestedParameter;
     }
 
-
+    public SubaruParameter getRequestedParameter() {
+        return requestedParameter;
+    }
 }

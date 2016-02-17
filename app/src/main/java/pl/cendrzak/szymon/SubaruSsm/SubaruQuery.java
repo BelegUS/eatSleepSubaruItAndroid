@@ -20,7 +20,7 @@ public class SubaruQuery {
         return Integer.decode("0x"+stringLsb).byteValue();
     }
 
-    public byte[] getQuery()
+    public byte[] getQueryBytes()
     {
         return new byte[] { 0x02, 0x78, getMsb(), getLsb(), 0x17 };
     }

@@ -9,6 +9,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.cardiomood.android.controls.gauge.SpeedometerGauge;
 
@@ -19,12 +20,13 @@ import java.util.List;
 import pl.cendrzak.szymon.SubaruSsm.AvailableCarParameters;
 import pl.cendrzak.szymon.SubaruSsm.NewSubaruValueListener;
 import pl.cendrzak.szymon.SubaruSsm.R;
-import pl.cendrzak.szymon.SubaruSsm.SubaruQuery;
+import pl.cendrzak.szymon.SubaruSsm.SubaruParameter;
 import pl.cendrzak.szymon.SubaruSsm.SubaruSsm;
 import pl.cendrzak.szymon.SubaruSsm.SubaruValue;
 
 public class SpeedometerFragment extends Fragment {
     private SpeedometerGauge speedometer;
+    private TextView currentValueText;
 
     public static final String IMAGE_RESOURCE_ID = "iconResourceID";
     public static final String ITEM_NAME = "itemName";
@@ -41,6 +43,7 @@ public class SpeedometerFragment extends Fragment {
         View view = inflater.inflate(R.layout.speedometer_fragment_layout, container,
                 false);
 
+        currentValueText = (TextView) view.findViewById(R.id.current_value_text);
 
         // Customize SpeedometerFragment
         speedometer = (SpeedometerGauge) view.findViewById(R.id.speedometer);
@@ -57,7 +60,7 @@ public class SpeedometerFragment extends Fragment {
         Spinner selectValueSpinner = (Spinner) view.findViewById(R.id.select_value_spinner);
 
         final AvailableCarParameters availableCarParameters = new AvailableCarParameters();
-        final HashMap<String,String> availableParametersMap = availableCarParameters.getAvailableParameters();
+        final HashMap<String,SubaruParameter> availableParametersMap = availableCarParameters.getAvailableParameters();
         final List<String> parametersNames = new ArrayList<String>(availableParametersMap.keySet());
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_selectable_list_item, parametersNames);
         selectValueSpinner.setAdapter(adapter);
@@ -66,8 +69,8 @@ public class SpeedometerFragment extends Fragment {
 
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selectedParameterName = (String) parametersNames.get(position);
-                subaruSsm.sendSubaruQuery(new SubaruQuery(selectedParameterName));
+                String selectedParameterKey = (String) parametersNames.get(position);
+                subaruSsm.queryCarForParameter(availableParametersMap.get(selectedParameterKey));
             }
 
             @Override
@@ -93,7 +96,7 @@ public class SpeedometerFragment extends Fragment {
 //                speedometer.addColoredRange(3500, 5500, Color.YELLOW);
 //                speedometer.addColoredRange(5500, 8000, Color.RED);
 //
-//                subaruSsm.sendSubaruQuery(subaruSsm.subaruQuery.getQueryForParameter(subaruSsm.currentRequestedParameter));
+//                subaruSsm.queryCarForParameter(subaruSsm.subaruQuery.getQueryForParameter(subaruSsm.currentRequestedParameter));
 //            }
 //        });
 //
@@ -114,7 +117,7 @@ public class SpeedometerFragment extends Fragment {
 //                speedometer.addColoredRange(75, 125, Color.GREEN);
 //                speedometer.addColoredRange(125, 200, Color.RED);
 //
-//                subaruSsm.sendSubaruQuery(subaruSsm.subaruQuery.getQueryForParameter(subaruSsm.currentRequestedParameter));
+//                subaruSsm.queryCarForParameter(subaruSsm.subaruQuery.getQueryForParameter(subaruSsm.currentRequestedParameter));
 //            }
 //        });
 //
@@ -135,7 +138,7 @@ public class SpeedometerFragment extends Fragment {
 //                speedometer.addColoredRange(35, 70, Color.YELLOW);
 //                speedometer.addColoredRange(70, 100, Color.RED);
 //
-//                subaruSsm.sendSubaruQuery(subaruSsm.subaruQuery.getQueryForParameter(subaruSsm.currentRequestedParameter));
+//                subaruSsm.queryCarForParameter(subaruSsm.subaruQuery.getQueryForParameter(subaruSsm.currentRequestedParameter));
 //            }
 //        });
 
@@ -144,7 +147,7 @@ public class SpeedometerFragment extends Fragment {
         endConnectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                subaruSsm.sendSubaruQuery(SubaruQuery.getEndConnectionQuery());
+//                subaruSsm.queryCarForParameter(SubaruQuery.getEndConnectionQuery());
             }
         });
 
@@ -152,6 +155,7 @@ public class SpeedometerFragment extends Fragment {
             @Override
             public void onNewSubaruValue(SubaruValue subaruValue) {
                 speedometer.setSpeed(subaruValue.value);
+                currentValueText.setText(subaruValue.value.toString());
             }
         });
 
