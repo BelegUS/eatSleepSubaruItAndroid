@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import pl.cendrzak.szymon.SubaruSsm.AvailableCarParameters;
+import pl.cendrzak.szymon.SubaruSsm.AvailableCars;
 import pl.cendrzak.szymon.SubaruSsm.NewSubaruValueListener;
 import pl.cendrzak.szymon.SubaruSsm.R;
 import pl.cendrzak.szymon.SubaruSsm.SubaruParameter;
@@ -31,8 +32,14 @@ public class SpeedometerFragment extends Fragment {
     public static final String IMAGE_RESOURCE_ID = "iconResourceID";
     public static final String ITEM_NAME = "itemName";
 
-    public SpeedometerFragment() {
+    AvailableCarParameters availableCarParameters;
 
+    HashMap<String,SubaruParameter> availableParametersMap;
+    List<String> parametersNames;
+
+    public SpeedometerFragment() {
+        availableCarParameters = new AvailableCarParameters();
+        availableParametersMap = availableCarParameters.getImprezaParameters();
     }
 
     @Override
@@ -57,13 +64,33 @@ public class SpeedometerFragment extends Fragment {
         speedometer.setLabelTextSize(30);
 
         //Set Spinner for Value selecting
-        Spinner selectValueSpinner = (Spinner) view.findViewById(R.id.select_value_spinner);
+        final Spinner selectValueSpinner = (Spinner) view.findViewById(R.id.select_value_spinner);
 
-        final AvailableCarParameters availableCarParameters = new AvailableCarParameters();
-        final HashMap<String,SubaruParameter> availableParametersMap = availableCarParameters.getAvailableParameters();
-        final List<String> parametersNames = new ArrayList<String>(availableParametersMap.keySet());
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_selectable_list_item, parametersNames);
-        selectValueSpinner.setAdapter(adapter);
+        final Spinner selectCarSpinner = (Spinner) view.findViewById(R.id.select_car_spinner);
+
+        final List<String> carsNames = new ArrayList<String>(new AvailableCars().get().keySet());
+        selectCarSpinner.setAdapter(new ArrayAdapter<String>(getActivity(), android.R.layout.simple_selectable_list_item, new ArrayList<String>(carsNames)));
+
+        selectCarSpinner.setOnItemSelectedListener(new Spinner.OnItemSelectedListener() {
+
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedCarKey = (String) carsNames.get(position);
+                if (selectedCarKey.equals("impreza")) {
+                    availableParametersMap = availableCarParameters.getImprezaParameters();
+                } else {
+                    availableParametersMap = availableCarParameters.getSvxParameters();
+                }
+                parametersNames = new ArrayList<String>(availableParametersMap.keySet());
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_selectable_list_item, parametersNames);
+                selectValueSpinner.setAdapter(adapter);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
 
         selectValueSpinner.setOnItemSelectedListener(new Spinner.OnItemSelectedListener() {
 
@@ -78,69 +105,6 @@ public class SpeedometerFragment extends Fragment {
 
             }
         });
-
-//        // Initialize the Engine Speed button with a listener for a click events
-//        Button engineSpeedButton = (Button) view.findViewById(R.id.engineSpeedButton);
-//        engineSpeedButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                subaruSsm.currentRequestedParameter = SubaruParameter.ENGINE_SPEED;
-//
-//                // configure value range and ticks
-//                speedometer.setMaxSpeed(8000);
-//                speedometer.setMajorTickStep(1000);
-//                speedometer.setMinorTicks(100);
-//
-//                // Configure value range colors
-//                speedometer.addColoredRange(0, 3500, Color.GREEN);
-//                speedometer.addColoredRange(3500, 5500, Color.YELLOW);
-//                speedometer.addColoredRange(5500, 8000, Color.RED);
-//
-//                subaruSsm.queryCarForParameter(subaruSsm.subaruQuery.getQueryForParameter(subaruSsm.currentRequestedParameter));
-//            }
-//        });
-//
-//        // Initialize the Engine Temp button with a listener for a click events
-//        Button engineTempButton = (Button) view.findViewById(R.id.engineTempButton);
-//        engineTempButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                subaruSsm.currentRequestedParameter = SubaruParameter.ENGINE_TEMP;
-//
-//                // configure value range and ticks
-//                speedometer.setMaxSpeed(200);
-//                speedometer.setMajorTickStep(20);
-//                speedometer.setMinorTicks(1);
-//
-//                // Configure value range colors
-//                speedometer.addColoredRange(0, 75, Color.RED);
-//                speedometer.addColoredRange(75, 125, Color.GREEN);
-//                speedometer.addColoredRange(125, 200, Color.RED);
-//
-//                subaruSsm.queryCarForParameter(subaruSsm.subaruQuery.getQueryForParameter(subaruSsm.currentRequestedParameter));
-//            }
-//        });
-//
-//        // Initialize the Engine Load button with a listener for a click events
-//        Button engineLoadButton = (Button) view.findViewById(R.id.engineLoadButton);
-//        engineLoadButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                subaruSsm.currentRequestedParameter = SubaruParameter.ENGINE_LOAD;
-//
-//                // configure value range and ticks
-//                speedometer.setMaxSpeed(300);
-//                speedometer.setMajorTickStep(10);
-//                speedometer.setMinorTicks(1);
-//
-//                // Configure value range colors
-//                speedometer.addColoredRange(0, 35, Color.GREEN);
-//                speedometer.addColoredRange(35, 70, Color.YELLOW);
-//                speedometer.addColoredRange(70, 100, Color.RED);
-//
-//                subaruSsm.queryCarForParameter(subaruSsm.subaruQuery.getQueryForParameter(subaruSsm.currentRequestedParameter));
-//            }
-//        });
 
         // Initialize the Stop button with a listener for a click events
         Button endConnectionButton = (Button) view.findViewById(R.id.endConnectionButton);
