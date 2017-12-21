@@ -270,7 +270,7 @@ public class SubaruSsm extends ActionBarActivity {
         }
 
         // Tell the BluetoothConnectionService to write
-        mConnectionService.write(SubaruQuery.getEndConnectionQuery());
+        mConnectionService.write((new EndConnectionQuery()).getBytes().toByteArray());
 
         // Reset out string buffer to zero and clear the edit text field
         mOutStringBuffer.setLength(0);
@@ -280,7 +280,7 @@ public class SubaruSsm extends ActionBarActivity {
     /**
      * Sends a Subaru query.
      *
-     * @param subaruParameter Instance of SubaruQuery to be sent.
+     * @param subaruParameter Instance of EngineQuery to be sent.
      */
     public void queryCarForParameter(SubaruParameter subaruParameter) {
         // Check that we're actually connected before trying anything
@@ -291,7 +291,7 @@ public class SubaruSsm extends ActionBarActivity {
 
         this.subaruDataProcessor.setRequestedParameter(subaruParameter);
 
-        byte[] queryToSend = subaruParameter.getQuery().getQueryBytes();
+        byte[] queryToSend = subaruParameter.getQuery().getQueryBytes().toByteArray();
         // Check that there's actually something to send
         if (queryToSend.length > 0) {
             // Tell the BluetoothConnectionService to write
@@ -313,22 +313,6 @@ public class SubaruSsm extends ActionBarActivity {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
-//                case MESSAGE_STATE_CHANGE:
-//
-//                    switch (msg.arg1) {
-//                        case BluetoothConnectionService.STATE_CONNECTED:
-////                            mTitle.setText(R.string.title_connected_to);
-////                            mTitle.append(mConnectedDeviceName);
-//                            break;
-//                        case BluetoothConnectionService.STATE_CONNECTING:
-////                            mTitle.setText(R.string.title_connecting);
-//                            break;
-//                        case BluetoothConnectionService.STATE_LISTEN:
-//                        case BluetoothConnectionService.STATE_NONE:
-////                            mTitle.setText(R.string.title_not_connected);
-//                            break;
-//                    }
-//                    break;
                 case MESSAGE_WRITE:
                     break;
                 case MESSAGE_READ:

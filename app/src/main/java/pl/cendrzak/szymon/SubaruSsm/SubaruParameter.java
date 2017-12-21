@@ -2,10 +2,10 @@ package pl.cendrzak.szymon.SubaruSsm;
 
 
 public class SubaruParameter {
-    private SubaruQuery query;
+    private ParameterQuery query;
     private ValueConverter valueConverter;
 
-    public SubaruParameter setQuery(SubaruQuery query) {
+    public SubaruParameter setQuery(ParameterQuery query) {
         this.query = query;
         return this;
     }
@@ -15,7 +15,7 @@ public class SubaruParameter {
         return this;
     }
 
-    public SubaruQuery getQuery() {
+    public ParameterQuery getQuery() {
         return query;
     }
 

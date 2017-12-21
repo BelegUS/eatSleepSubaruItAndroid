@@ -111,7 +111,7 @@ public class SpeedometerFragment extends Fragment {
         endConnectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                subaruSsm.queryCarForParameter(SubaruQuery.getEndConnectionQuery());
+//                subaruSsm.queryCarForParameter(EngineQuery.getEndConnectionQuery());
             }
         });
 

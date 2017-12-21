@@ -16,6 +16,7 @@
 
 package pl.cendrzak.szymon.SubaruSsm;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -39,7 +40,7 @@ import android.util.Log;
  */
 public class BluetoothConnectionService {
 
-    private static final String TAG = "BluetoothConnectionService";
+    private static final String TAG = "BTConnectionService";
 
     // Name for the SDP record when creating server socket
     private static final String NAME = "SubaruSsm";
